@@ -13,11 +13,8 @@ const TaskEdit = () => {
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const token = localStorage.getItem('token');
         const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         };
         const response = await axios.get(`http://localhost:5000/api/todos/${id}`, config);
         setTask(response.data);
@@ -33,11 +30,8 @@ const TaskEdit = () => {
 
   const handleUpdateTask = async (updatedTask) => {
     try {
-      const token = localStorage.getItem('token');
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       };
       await axios.put(`http://localhost:5000/api/todos/${id}`, updatedTask, config);
       navigate('/tasks'); // Redirect to tasks page on successful update

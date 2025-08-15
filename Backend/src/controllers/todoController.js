@@ -5,8 +5,40 @@ const Todo = require('../models/Todo');
 // @route   GET /api/todos
 // @access  Private
 const getTodos = async (req, res) => {
-  const todos = await Todo.find({ user: req.user._id });
-  res.json(todos);
+  const page = parseInt(req.query.page) || 1;
+  let limit = parseInt(req.query.limit) || 10;
+
+  // Clamp limit to [5..50]
+  limit = Math.max(5, Math.min(limit, 50));
+
+  const filter = { user: req.user.id };
+
+  if (req.query.priority) {
+    filter.priority = req.query.priority;
+  }
+
+  if (req.query.completed) {
+    filter.completed = req.query.completed === 'true';
+  }
+
+  if (req.query.q) {
+    filter.$text = { $search: req.query.q };
+  }
+
+  const total = await Todo.countDocuments(filter);
+  const totalPages = Math.ceil(total / limit);
+
+  const todos = await Todo.find(filter)
+    .limit(limit)
+    .skip((page - 1) * limit);
+
+  res.json({
+    data: todos,
+    page,
+    limit,
+    total,
+    totalPages,
+  });
 };
 
 // @desc    Get single todo
@@ -26,37 +58,60 @@ const getTodoById = async (req, res) => {
 // @route   POST /api/todos
 // @access  Private
 const createTodo = async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, priority, completed, dueDate } = req.body;
 
-  if (!title) {
-    return res.status(400).json({ message: 'Title is required' });
+  if (!title || !dueDate) {
+    return res.status(400).json({ message: 'Title and Due Date are required' });
   }
 
   const todo = new Todo({
     user: req.user._id,
     title,
     description,
+    priority,
+    completed,
+    dueDate,
   });
 
-  const createdTodo = await todo.save();
-  res.status(201).json(createdTodo);
+  try {
+    const createdTodo = await todo.save();
+    res.status(201).json(createdTodo);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: messages.join(', ') });
+    } else {
+      return res.status(500).json({ message: 'Server Error' });
+    }
+  }
 };
 
 // @desc    Update a todo
 // @route   PUT /api/todos/:id
 // @access  Private
 const updateTodo = async (req, res) => {
-  const { title, description, completed } = req.body;
+  const { title, description, priority, completed, dueDate } = req.body;
 
   const todo = await Todo.findById(req.params.id);
 
   if (todo && todo.user.toString() === req.user._id.toString()) {
-    todo.title = title || todo.title;
-    todo.description = description || todo.description;
+    todo.title = title !== undefined ? title : todo.title;
+    todo.description = description !== undefined ? description : todo.description;
+    todo.priority = priority !== undefined ? priority : todo.priority;
     todo.completed = completed !== undefined ? completed : todo.completed;
+    todo.dueDate = dueDate !== undefined ? dueDate : todo.dueDate;
 
-    const updatedTodo = await todo.save();
-    res.json(updatedTodo);
+    try {
+      const updatedTodo = await todo.save();
+      res.json(updatedTodo);
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(val => val.message);
+        return res.status(400).json({ message: messages.join(', ') });
+      } else {
+        return res.status(500).json({ message: 'Server Error' });
+      }
+    }
   } else {
     res.status(404).json({ message: 'Todo not found' });
   }
@@ -70,7 +125,7 @@ const deleteTodo = async (req, res) => {
 
   if (todo && todo.user.toString() === req.user._id.toString()) {
     await todo.deleteOne();
-    res.json({ message: 'Todo removed' });
+    res.status(204).send();
   } else {
     res.status(404).json({ message: 'Todo not found' });
   }

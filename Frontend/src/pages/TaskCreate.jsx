@@ -8,11 +8,8 @@ const TaskCreate = () => {
 
   const handleCreateTask = async (task) => {
     try {
-      const token = localStorage.getItem('token');
       const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       };
       await axios.post('http://localhost:5000/api/todos', task, config);
       navigate('/tasks'); // Redirect to tasks page on successful creation

@@ -1,9 +1,9 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../api/axiosInstance'; // Import the configured axios instance
 
 export const AuthContext = createContext();
 
-const API_URL = 'http://localhost:5000/api/auth'; // Assuming your backend runs on port 5000
+const API_URL = '/auth'; // Base URL is now handled by axiosInstance
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,25 +11,22 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
     setLoading(false);
   }, []);
+
+  
 
   const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API_URL}/register`, userData);
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('token', response.data.token); // Store token
+      const response = await axiosInstance.post(`${API_URL}/register`, userData); // Use axiosInstance
+      setUser(response.data.user); 
       setLoading(false);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error("Registration error:", err);
+      setError(err.response?.data?.message || err.message || 'Registration failed');
       setLoading(false);
       throw err;
     }
@@ -39,14 +36,15 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API_URL}/login`, userData);
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('token', response.data.token); // Store token
+      const response = await axiosInstance.post(`${API_URL}/login`, userData); // Use axiosInstance
+      const { user: userDataResponse } = response.data;
+      
+      setUser(userDataResponse);
       setLoading(false);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || err.message || 'Login failed');
       setLoading(false);
       throw err;
     }
@@ -54,8 +52,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token'); // Remove token on logout
   };
 
   return (

@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import { setupAxiosInterceptors } from './api/axiosInstance';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import TaskList from './pages/TaskList';
@@ -12,6 +13,11 @@ import './App.css';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setupAxiosInterceptors(navigate);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -21,16 +27,14 @@ function App() {
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
-      <Router>
-        <Routes>
+      <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<TaskList />} />
+          <Route path="/tasks" element={<TaskList />} />
           <Route path="/create" element={<TaskCreate />} />
           <Route path="/edit/:id" element={<TaskEdit />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
     </div>
   );
 }

@@ -2,11 +2,6 @@
 const mongoose = require('mongoose');
 
 const TodoSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
   title: {
     type: String,
     required: true,
@@ -14,14 +9,33 @@ const TodoSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'low',
+  },
   completed: {
     type: Boolean,
     default: false,
   },
-  createdAt: {
+  dueDate: {
     type: Date,
-    default: Date.now,
+    required: [true, 'Due date is required'],
+    validate: {
+      validator: function(v) {
+        // Due date must be today or in the future
+        return v >= new Date().setHours(0, 0, 0, 0);
+      },
+      message: props => `${props.value} is not a valid due date! Due date must be today or in the future.`
+    },
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Todo', TodoSchema);
