@@ -23,24 +23,24 @@ const TaskList = () => {
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     setError(null);
-
+  
     try {
-      // Only include filters if not "all"
+      // Only include filters if they are not 'all'
       const params = {
         page,
         limit,
         q: searchTerm,
         sort: sortOrder,
       };
-
+  
       if (priorityFilter !== 'all') params.priority = priorityFilter;
       if (completedFilter !== 'all') params.completed = completedFilter;
-
+  
       const config = {
         withCredentials: true,
         params,
       };
-
+  
       const response = await axios.get('http://localhost:5000/api/todos', config);
       setTasks(response.data.data);
       setTotalTasks(response.data.total);
@@ -51,10 +51,12 @@ const TaskList = () => {
       setLoading(false);
     }
   }, [page, limit, priorityFilter, completedFilter, searchTerm, sortOrder]);
+  
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+  
 
   const handlePageChange = (newPage) => setPage(newPage);
 
@@ -63,6 +65,7 @@ const TaskList = () => {
     if (filterType === 'priority') setPriorityFilter(value);
     if (filterType === 'completed') setCompletedFilter(value);
   };
+  
 
   const handleSearch = (query) => {
     setPage(1);
@@ -115,7 +118,7 @@ const TaskList = () => {
         <SortControls onSort={handleSort} />
       </div>
       <div className="flex flex-col sm:flex-row items-center justify-start mb-4 gap-4">
-        <FilterBar onFilter={handleFilter} />
+        <FilterBar priorityFilter={priorityFilter} completedFilter={completedFilter} onFilter={handleFilter} />
       </div>
       <div className="space-y-4">
         {tasks.map((task) => (

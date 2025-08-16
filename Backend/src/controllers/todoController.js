@@ -10,16 +10,19 @@ const getTodos = async (req, res) => {
   // Clamp limit to [5..50]
   limit = Math.max(5, Math.min(limit, 50));
 
-  const filter = { owner: req.user._id }; // ✅ changed to owner
+  const filter = { owner: req.user._id };
 
-  if (req.query.priority) {
+  // Priority filter (ignore "all")
+  if (req.query.priority && req.query.priority !== 'all') {
     filter.priority = req.query.priority;
   }
 
-  if (req.query.completed) {
+  // Completed filter (ignore "all")
+  if (req.query.completed && req.query.completed !== 'all') {
     filter.completed = req.query.completed === 'true';
   }
 
+  // Text search
   if (req.query.q) {
     filter.$text = { $search: req.query.q };
   }
@@ -27,6 +30,7 @@ const getTodos = async (req, res) => {
   const total = await Todo.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
 
+  // Sorting
   let sortOptions = {};
   if (req.query.sort) {
     const [field, order] = req.query.sort.split(':');
@@ -36,7 +40,7 @@ const getTodos = async (req, res) => {
   }
 
   const todos = await Todo.find(filter)
-    .sort(sortOptions) // Apply sorting here
+    .sort(sortOptions)
     .limit(limit)
     .skip((page - 1) * limit);
 

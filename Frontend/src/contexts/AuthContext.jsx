@@ -9,19 +9,23 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  console.log(user)
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser && storedUser !== 'undefined') {
+      setUser(JSON.parse(storedUser));
+    }
     setLoading(false);
   }, []);
-
-  
 
   const register = async (userData) => {
     setLoading(true);
     setError(null);
     try {
       const response = await axiosInstance.post(`${API_URL}/register`, userData); // Use axiosInstance
-      setUser(response.data.user); 
+      setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       setLoading(false);
       return response.data;
     } catch (err) {
@@ -38,8 +42,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axiosInstance.post(`${API_URL}/login`, userData); // Use axiosInstance
       const { user: userDataResponse } = response.data;
-      
+
       setUser(userDataResponse);
+      localStorage.setItem('user', JSON.stringify(userDataResponse));
       setLoading(false);
       return response.data;
     } catch (err) {
@@ -52,6 +57,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('user');
   };
 
   return (
