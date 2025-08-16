@@ -7,7 +7,7 @@ const FilterBar = ({ onFilter }) => {
         onChange={(e) => onFilter('priority', e.target.value)}
         className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
       >
-        <option value="">All Priorities</option>
+        <option value="all">All Priorities</option>
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
@@ -17,7 +17,7 @@ const FilterBar = ({ onFilter }) => {
         onChange={(e) => onFilter('completed', e.target.value)}
         className="px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
       >
-        <option value="">All Statuses</option>
+        <option value="all">All Statuses</option>
         <option value="false">Active</option>
         <option value="true">Completed</option>
       </select>

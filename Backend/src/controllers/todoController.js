@@ -1,4 +1,3 @@
-
 const Todo = require('../models/Todo');
 
 // @desc    Get all todos for a user
@@ -11,7 +10,7 @@ const getTodos = async (req, res) => {
   // Clamp limit to [5..50]
   limit = Math.max(5, Math.min(limit, 50));
 
-  const filter = { user: req.user.id };
+  const filter = { owner: req.user._id }; // ✅ changed to owner
 
   if (req.query.priority) {
     filter.priority = req.query.priority;
@@ -28,7 +27,16 @@ const getTodos = async (req, res) => {
   const total = await Todo.countDocuments(filter);
   const totalPages = Math.ceil(total / limit);
 
+  let sortOptions = {};
+  if (req.query.sort) {
+    const [field, order] = req.query.sort.split(':');
+    if (field && order) {
+      sortOptions[field] = order === 'asc' ? 1 : -1;
+    }
+  }
+
   const todos = await Todo.find(filter)
+    .sort(sortOptions) // Apply sorting here
     .limit(limit)
     .skip((page - 1) * limit);
 
@@ -47,7 +55,7 @@ const getTodos = async (req, res) => {
 const getTodoById = async (req, res) => {
   const todo = await Todo.findById(req.params.id);
 
-  if (todo && todo.user.toString() === req.user._id.toString()) {
+  if (todo && todo.owner.toString() === req.user._id.toString()) { // ✅ owner
     res.json(todo);
   } else {
     res.status(404).json({ message: 'Todo not found' });
@@ -65,7 +73,7 @@ const createTodo = async (req, res) => {
   }
 
   const todo = new Todo({
-    user: req.user._id,
+    owner: req.user._id, // ✅ owner
     title,
     description,
     priority,
@@ -94,7 +102,7 @@ const updateTodo = async (req, res) => {
 
   const todo = await Todo.findById(req.params.id);
 
-  if (todo && todo.user.toString() === req.user._id.toString()) {
+  if (todo && todo.owner.toString() === req.user._id.toString()) { // ✅ owner
     todo.title = title !== undefined ? title : todo.title;
     todo.description = description !== undefined ? description : todo.description;
     todo.priority = priority !== undefined ? priority : todo.priority;
@@ -123,7 +131,7 @@ const updateTodo = async (req, res) => {
 const deleteTodo = async (req, res) => {
   const todo = await Todo.findById(req.params.id);
 
-  if (todo && todo.user.toString() === req.user._id.toString()) {
+  if (todo && todo.owner.toString() === req.user._id.toString()) { // ✅ owner
     await todo.deleteOne();
     res.status(204).send();
   } else {

@@ -48,7 +48,7 @@ const TaskEdit = () => {
   return (
     <div className="container px-4 py-8 mx-auto dark:bg-gray-900 dark:text-gray-100">
       <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Edit Task</h1>
-      <TaskForm onSubmit={handleUpdateTask} initialData={task} />
+      <TaskForm onSubmit={handleUpdateTask} task={task} />
     </div>
   );
 };

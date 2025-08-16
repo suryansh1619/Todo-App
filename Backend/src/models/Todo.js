@@ -24,7 +24,9 @@ const TodoSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         // Due date must be today or in the future
-        return v >= new Date().setHours(0, 0, 0, 0);
+        const todayUtc = new Date();
+        todayUtc.setUTCHours(0, 0, 0, 0); // Set to start of today in UTC
+        return v.getTime() >= todayUtc.getTime(); // Compare timestamps
       },
       message: props => `${props.value} is not a valid due date! Due date must be today or in the future.`
     },

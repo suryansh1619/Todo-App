@@ -9,7 +9,29 @@ const TaskForm = ({ onSubmit, task = {} }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ title, description, priority, completed, dueDate });
+    if (!title) {
+      alert('Title is required.');
+      return;
+    }
+    if (!dueDate) {
+      alert('Due Date is required.');
+      return;
+    }
+
+    // New validation for past due date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    const selectedDate = new Date(dueDate);
+    selectedDate.setHours(0, 0, 0, 0); // Set to start of selected date
+
+    if (selectedDate < today) {
+      alert('Due Date cannot be in the past.');
+      return;
+    }
+
+    const utcDueDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000)).toISOString();
+
+    onSubmit({ title, description, priority, completed, dueDate: utcDueDate });
     setTitle('');
     setDescription('');
     setPriority('low');
@@ -91,7 +113,7 @@ const TaskForm = ({ onSubmit, task = {} }) => {
         type="submit"
         className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-700 dark:hover:bg-indigo-600"
       >
-        {task.id ? 'Update Task' : 'Create Task'}
+        {task._id ? 'Update Task' : 'Create Task'}
       </button>
     </form>
   );
